@@ -1,0 +1,76 @@
+# Ignore Visual Studio-specific files
+.vs/
+*.user
+*.suo
+*.cache
+*.pdb
+*.aps
+*.ncb
+*.opendb
+*.VC.db
+
+# Ignore build outputs
+bin/
+obj/
+out/
+GeneratedFiles/
+TestResults/
+*.exe
+*.dll
+*.app/
+*.log
+
+# Ignore Razor temporary files
+*.RazorAssemblyInfo.cs
+*.razor.g.cs
+*.razor.g.i.cs
+
+# Ignore user secrets
+secrets.json
+
+# Ignore package managers
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Ignore dependency lock files (optional)
+package-lock.json
+yarn.lock
+
+# Ignore .NET dependencies and cache
+*.nuget/
+.nuget/
+packages/
+project.lock.json
+project.assets.json
+
+# Ignore Blazor WebAssembly artifacts
+wwwroot/dist/
+wwwroot/framework/
+wwwroot/_content/
+wwwroot/css/app.css
+wwwroot/css/app.css.map
+wwwroot/js/
+wwwroot/service-worker.published.js
+
+# Ignore publish artifacts
+publish/
+wwwroot/build/
+dist/
+
+# Ignore IDE-specific settings
+.idea/
+*.iml
+*.sln.docstates
+*.sln.cache
+
+# Ignore database files
+*.mdf
+*.ldf
+
+# Ignore Mac system files
+.DS_Store
+
+# Ignore Windows system files
+Thumbs.db
+Desktop.ini

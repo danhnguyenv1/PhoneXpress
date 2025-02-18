@@ -1,0 +1,11 @@
+﻿@font-face {
+    font-family: 'MyFont';
+    src: url('/fonts/vermin_vibes.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+#topBar {
+    font-family: MyFont;
+    text-align: center
+}

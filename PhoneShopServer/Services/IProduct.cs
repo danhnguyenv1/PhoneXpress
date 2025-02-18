@@ -1,7 +1,7 @@
 ﻿using PhoneXpressSharedLibrary.Models;
 using PhoneXpressSharedLibrary.Responses;
 
-namespace PhoneXpressSharedLibrary.Abstracts
+namespace PhoneXpressServer.Repositories
 {
     public interface IProduct
     {

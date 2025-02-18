@@ -12,7 +12,7 @@ using PhoneXpressServer.Data;
 namespace PhoneXpressServer.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250215091553_First")]
+    [Migration("20250218133447_First")]
     partial class First
     {
         /// <inheritdoc />
@@ -25,6 +25,22 @@ namespace PhoneXpressServer.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("PhoneXpressSharedLibrary.Models.Category", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Category");
+                });
+
             modelBuilder.Entity("PhoneXpressSharedLibrary.Models.Product", b =>
                 {
                     b.Property<int>("Id")
@@ -36,6 +52,9 @@ namespace PhoneXpressServer.Migrations
                     b.Property<string>("Base64Img")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("DateUploaded")
                         .HasColumnType("datetime2");
@@ -59,7 +78,25 @@ namespace PhoneXpressServer.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CategoryId");
+
                     b.ToTable("Products");
+                });
+
+            modelBuilder.Entity("PhoneXpressSharedLibrary.Models.Product", b =>
+                {
+                    b.HasOne("PhoneXpressSharedLibrary.Models.Category", "category")
+                        .WithMany("Products")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("category");
+                });
+
+            modelBuilder.Entity("PhoneXpressSharedLibrary.Models.Category", b =>
+                {
+                    b.Navigation("Products");
                 });
 #pragma warning restore 612, 618
         }

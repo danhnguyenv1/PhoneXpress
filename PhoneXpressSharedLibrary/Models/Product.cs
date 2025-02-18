@@ -18,5 +18,9 @@ namespace PhoneXpressSharedLibrary.Models
         public int Quatity { get; set; }
         public bool Featured { get; set; } = false;
         public DateTime DateUploaded { get; set; } = DateTime.Now;
+
+        public Category? category { get; set; }
+
+        public int CategoryId { get; set; }
     }
 }

@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PhoneXpressServer.Data;
 using PhoneXpressServer.Repositories;
-using PhoneXpressSharedLibrary.Abstracts;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +20,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("Default") ?? throw new InvalidOperationException("Connection string not found"));
 });
 builder.Services.AddScoped<IProduct, ProductServices>();
+builder.Services.AddScoped<ICategory, CategoryService>();
 
 //Ending ... 
 

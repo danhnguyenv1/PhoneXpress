@@ -1,12 +1,11 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
-using PhoneXpressSharedLibrary.Abstracts;
 using PhoneXpressSharedLibrary.Models;
 using PhoneXpressSharedLibrary.Responses;
 
 namespace PhoneXpressClient.Services
 {
-    public class ClientServices(HttpClient httpClient) : IProduct
+    public class ClientServices(HttpClient httpClient) : IProductService
     {
         private const string BaseUrl = "api/product";
         private static string SerializeObj(object modelOject) => JsonSerializer.Serialize(modelOject, JsonOptions());

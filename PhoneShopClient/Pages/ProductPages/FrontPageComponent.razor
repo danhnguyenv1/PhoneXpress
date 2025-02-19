@@ -1,4 +1,4 @@
-﻿@page "/test"
+﻿@page "/front"
 
 <div class="control">
 	<div class="row">
@@ -9,8 +9,8 @@
 					<SfCarousel ButtonsVisibility="CarouselButtonVisibility.VisibleOnHover" AnimationEffect="CarouselAnimationEffect.Slide" AutoPlay="true" ShowIndicators="true">
 						<ChildContent>
 							@foreach (Product product in (FeaturedProductList ?? new List<Product>())
-												.OrderByDescending(_ => _.DateUploaded)
-												.Take(5))
+																	.OrderByDescending(_ => _.DateUploaded)
+																	.Take(5))
 							{
 								<CarouselItem>
 									<figure class="img-container">
@@ -76,12 +76,8 @@
 	{
 		FeaturedProductList?.Clear();
 		bool featured = true;
-		var results = await ClientService.GetAllProducts(featured);
-		if (results is null) return;
-
-		var listProducts = results.ToList();
-		foreach (var i in listProducts)
-			FeaturedProductList!.Add(i);
+		await ClientService.GetAllProducts(featured);
+		FeaturedProductList = ClientService.FeaturedProducts;
 	}
 
 	string GetNewLabel(DateTime dateUploadted)

@@ -34,7 +34,7 @@
 														</span>
 													</p>
 												</div>
-												<p class="text-muted fs-5 w-75" style="text-align:justify-all; font-family:Cambria">@(GetDescription(product.Description))</p>
+												<p class="text-muted fs-5 w-75" style="text-align:justify-all; font-family:Cambria">@(General.GetDescription(product.Description!))</p>
 											</div>
 											<div class="hstack gap-1 d-flex justify-content-center">
 												<button class="btn btnalert-secondary fw-bold" id="styleButton"><i class="fa fa-list"></i> Details</button>
@@ -86,20 +86,7 @@
 	{
 		int maxDays = 30;
 		int productDateAfterUploaded = (DateTime.Now - dateUploadted).Days;
-		return productDateAfterUploaded <= maxDays ? "New" : null;
-	}
-
-
-	string GetDescription(string description)
-	{
-		if (string.IsNullOrWhiteSpace(description))
-		{
-			return "No description available."; // Prevent error
-		}
-
-		string appendDots = "...";
-		int maxLength = 40;
-		return description.Length > maxLength ? description.Substring(0, maxLength) + appendDots : description;
+		return productDateAfterUploaded <= maxDays ? "New" : null!;
 	}
 
 	public void Dispose()

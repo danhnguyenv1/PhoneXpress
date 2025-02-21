@@ -13,5 +13,6 @@ namespace PhoneXpressClient.Services
 
         List<Product> ProductsByCategory { get; set; }
         Task GetProductsByCategory(int categoryId);
+        Product GetRandomProduct();
     }
 }

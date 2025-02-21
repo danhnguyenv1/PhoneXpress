@@ -1,6 +1,7 @@
 ﻿using System.Net.WebSockets;
 using PhoneXpressSharedLibrary.Models;
 using PhoneXpressSharedLibrary.Responses;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace PhoneXpressClient.Services
 {
@@ -75,6 +76,17 @@ namespace PhoneXpressClient.Services
             await GetAllProducts(featued);
             ProductsByCategory = AllProducts.Where(_ => _.CategoryId == categoryId).ToList();
             ProductAction?.Invoke();
+        }
+
+        //Get Random Product fo Banner
+        public Product GetRandomProduct()
+        {
+            if (FeaturedProducts is null) return null!;
+            Random RandomNumbers = new();
+            int minimumNumber = FeaturedProducts.Min(_ => _.Id);
+            int maximumNumber = FeaturedProducts.Max(_ => _.Id) + 1;
+            int result = RandomNumbers.Next(minimumNumber, maximumNumber);
+            return FeaturedProducts.FirstOrDefault(_ => _.Id == result)!;
         }
 
         //Categorie

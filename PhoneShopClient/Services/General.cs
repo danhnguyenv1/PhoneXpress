@@ -19,5 +19,17 @@ namespace PhoneXpressClient.Services
                 UnmappedMemberHandling = JsonUnmappedMemberHandling.Skip
             };
         }
+
+        public static string GetDescription(string description)
+        {
+            if (string.IsNullOrWhiteSpace(description))
+            {
+                return "No description available.";
+            }
+
+            string appendDots = "...";
+            int maxLength = 100;
+            return description.Length > maxLength ? description.Substring(0, maxLength) + appendDots : description;
+        }
     }
 }

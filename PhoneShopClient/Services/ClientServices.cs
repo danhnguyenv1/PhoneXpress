@@ -14,6 +14,7 @@ namespace PhoneXpressClient.Services
         public Action? ProductAction { get; set; }
         public List<Product> AllProducts { get; set; }
         public List<Product> FeaturedProducts { get; set; }
+        public List<Product> ProductsByCategory { get; set; }
 
         //Products
         public async Task<ServiceResponse> AddProduct(Product model)
@@ -25,8 +26,10 @@ namespace PhoneXpressClient.Services
                 return result;
 
             var apiResponse = await ReadContent(response);
+            var data = General.DeserializeJsonString<ServiceResponse>(apiResponse);
+            if (!data.Flag) return data;
             await ClearAndGetAllProducts();
-            return General.DeserializeJsonString<ServiceResponse>(apiResponse);
+            return data;
         }
 
         private async Task ClearAndGetAllProducts()
@@ -66,6 +69,14 @@ namespace PhoneXpressClient.Services
             return [.. General.DeserializeJsonStringList<Product>(result)];
         }
 
+        public async Task GetProductsByCategory(int categoryId)
+        {
+            bool featued = false;
+            await GetAllProducts(featued);
+            ProductsByCategory = AllProducts.Where(_ => _.CategoryId == categoryId).ToList();
+            ProductAction?.Invoke();
+        }
+
         //Categorie
         public async Task<ServiceResponse> AddCategory(Category model)
         {
@@ -76,8 +87,12 @@ namespace PhoneXpressClient.Services
                 return result;
 
             var apiResponse = await ReadContent(response);
+
+            var data = General.DeserializeJsonString<ServiceResponse>(apiResponse);
+            if (!data.Flag) return data;
             await ClearAndGetAllCategories();
-            return General.DeserializeJsonString<ServiceResponse>(apiResponse);
+            return data;
+
         }
 
         public async Task GetAllCategories()

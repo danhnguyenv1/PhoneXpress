@@ -16,6 +16,9 @@
 @using Syncfusion.Blazor.Navigations
 @using PhoneXpressClient.Pages.OtherPages
 @using PhoneXpressClient.Pages.ProductPages
+@using PhoneXpressClient.Pages.CategoryPages
 
 @inject IJSRuntime js
-@inject IProductService ClientService
+@inject IProductService ProductService
+@inject ICategoryService CategoryService
+@inject MessageDialogSerrvice messageDialogService

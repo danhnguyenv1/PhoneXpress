@@ -1,16 +1,16 @@
-﻿@page "/front"
+﻿@implements IDisposable
 
 <div class="control">
 	<div class="row">
 		<div class="col-md-12">
-			@if (FeaturedProductList!.Any())
+			@if (ProductService.FeaturedProducts is not null)
 			{
 				<div class="control-container text-dark">
 					<SfCarousel ButtonsVisibility="CarouselButtonVisibility.VisibleOnHover" AnimationEffect="CarouselAnimationEffect.Slide" AutoPlay="true" ShowIndicators="true">
 						<ChildContent>
-							@foreach (Product product in (FeaturedProductList ?? new List<Product>())
-																	.OrderByDescending(_ => _.DateUploaded)
-																	.Take(5))
+							@foreach (Product product in (ProductService.FeaturedProducts ?? new List<Product>())
+												.OrderByDescending(_ => _.DateUploaded)
+												.Take(5))
 							{
 								<CarouselItem>
 									<figure class="img-container">
@@ -69,15 +69,17 @@
 	List<Product>? FeaturedProductList = new();
 	protected override async Task OnInitializedAsync()
 	{
-		await RetrieveFeatuedProducts();
+		bool featured = true;
+		await ProductService.GetAllProducts(featured);
+		ProductService.ProductAction += StateHasChanged;
 	}
 
 	private async Task RetrieveFeatuedProducts()
 	{
 		FeaturedProductList?.Clear();
 		bool featured = true;
-		await ClientService.GetAllProducts(featured);
-		FeaturedProductList = ClientService.FeaturedProducts;
+		await ProductService.GetAllProducts(featured);
+		FeaturedProductList = ProductService.FeaturedProducts;
 	}
 
 	string GetNewLabel(DateTime dateUploadted)
@@ -98,5 +100,10 @@
 		string appendDots = "...";
 		int maxLength = 40;
 		return description.Length > maxLength ? description.Substring(0, maxLength) + appendDots : description;
+	}
+
+	public void Dispose()
+	{
+		ProductService.ProductAction -= StateHasChanged;
 	}
 }

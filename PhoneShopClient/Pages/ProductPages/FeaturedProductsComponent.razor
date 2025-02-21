@@ -35,83 +35,88 @@
 
 <style>
 	#styleCursor {
-	cursor: pointer;
+		cursor: pointer;
 	}
 
 	#productCover {
-	width: 150px;
-	font-size: 14px;
-	height: 50px;
-	position: absolute;
-	botton: 10px;
-	border-radius: 10px;
-	padding: 2px;
-	cursor: pointer;
+		width: 150px;
+		font-size: 14px;
+		height: 50px;
+		position: absolute;
+		botton: 10px;
+		border-radius: 10px;
+		padding: 2px;
+		cursor: pointer;
 	}
 
-	#productCover:hover {
-	opacity: 1
-	}
+		#productCover:hover {
+			opacity: 1
+		}
 
 	img {
-	opacity: 1;
-	cursor: pointer;
+		opacity: 1;
+		cursor: pointer;
 	}
 
 	.childImage:hover {
-	opacity: 0.5;
+		opacity: 0.5;
 	}
 </style>
 
 @code {
-	List<Product>? ProductList = new();
-	protected override async Task OnInitializedAsync()
-	{
-		await RetriveProducts();
-	}
-
-	private async Task RetriveProducts()
-	{
-		ProductList?.Clear();
-		bool featured = true;
-		 await ClientService.GetAllProducts(featured);
-		var data = ClientService.FeaturedProducts;
-		LoadData();
-	}
-
 	public int PageSize { get; set; } = 0;
 	public int Skip { get; set; } = 0;
 	public int Take { get; set; } = 8;
 
 	List<Product> FeaturedProducts = new();
 
-	void LoadData()
+
+	protected override async Task OnInitializedAsync()
 	{
-		var getData = ProductList!.Skip(Skip).Take(Take).ToList();
-		Skip += PageSize;
-		FeaturedProducts?.Clear();
-		foreach (var i in getData)
-			FeaturedProducts!.Add(i);
+		bool featured = true;
+		await ProductService.GetAllProducts(featured);
+		ProductService.ProductAction += StateHasChanged;
+		LoadData();
 	}
 
-	void PreviousButton()
+	private async void LoadData()
+	{
+		var getData = await SkipAndTake(Skip, Take);
+		Skip += PageSize;
+		AddToFeaturedProducts(getData);
+	}
+
+	private async Task<List<Product>> SkipAndTake(int skip, int take) => ProductService.FeaturedProducts
+		.Skip(Skip)
+		.Take(Take)
+		.ToList();
+
+	private void AddToFeaturedProducts(List<Product> incomingProduct)
+	{
+		FeaturedProducts?.Clear();
+		FeaturedProducts = incomingProduct;
+
+	}
+
+	private async void NextButton()
+	{
+		if (Skip > ProductService.FeaturedProducts.Count()) return;
+		var getNextProducts = await SkipAndTake(Skip, Take);
+		Skip += PageSize;
+		AddToFeaturedProducts(getNextProducts);
+	}
+
+	private async void PreviousButton()
 	{
 		if (Skip == 8) return;
-		var getNextProducts = ProductList!.Skip(Skip - (PageSize * 2)).Take(Take).ToList();
+		var getPreviousProducts = await SkipAndTake(Skip - (PageSize * 2), Take);
 		Skip -= PageSize;
-		FeaturedProducts?.Clear();
-		foreach (var i in getNextProducts)
-			FeaturedProducts!.Add(i);
+		AddToFeaturedProducts(getPreviousProducts);
 	}
 
-	void NextButton()
+	public void Dispose()
 	{
-		if (Skip > ProductList!.Count()) return;
-		var getNextProducts = ProductList!.Skip(Skip).Take(Take).ToList();
-		Skip += PageSize;
-		FeaturedProducts?.Clear();
-		foreach (var i in getNextProducts)
-			FeaturedProducts!.Add(i);
+		ProductService.ProductAction -= StateHasChanged;
 	}
 
 }

@@ -14,5 +14,7 @@ builder.Services.AddSyncfusionBlazor();
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 builder.Services.AddScoped<IProductService, ClientServices>();
+builder.Services.AddScoped<ICategoryService, ClientServices>();
+builder.Services.AddScoped<MessageDialogSerrvice>();
 await builder.Build().RunAsync();
 

@@ -1,4 +1,6 @@
 ﻿@page "/add-product"
+@implements IDisposable
+
 <div class="container">
 	<div class="row">
 		<div class="col-md-6">
@@ -11,6 +13,19 @@
 						<div class="form-group">
 							<label class="form-label">Name</label>
 							<InputText @bind-Value="MyProduct.Name" class="form-control"></InputText>
+						</div>
+						<div class="form-group">
+							<label class="form-lebal">Select Category</label>
+							@if (CategoryService.AllCategories is not null)
+							{
+								<InputSelect class="form-select form-control-sm" @bind-Value="@MyProduct.CategoryId">
+									<option selected>Select Category</option>
+									@foreach (var category in CategoryService.AllCategories)
+									{
+										<option value="@category.Id">@category.Name</option>
+									}
+								</InputSelect>
+							}
 						</div>
 						<div class="form-group mt-3">
 							<label class="form-label">Price</label>
@@ -33,13 +48,13 @@
 					</div>
 					<div class="card-footer">
 						<div class="form--group mt-3">
-							@if (ShowSaveButton)
+							@if (messageDialogService.ShowSaveButton)
 							{
 								<button type="submit" class="btn btn-outline-primary"><i class="fa fa-plus"></i> Save Product</button>
 
 
 							}
-							<BusyButtonComponent ShowBusyButton="ShowBusyButton"></BusyButtonComponent>
+							<BusyButtonComponent ShowBusyButton="messageDialogService.ShowBusyButton"></BusyButtonComponent>
 						</div>
 
 					</div>
@@ -48,29 +63,34 @@
 		</div>
 	</div>
 </div>
-<MessageDialog @ref="messageDialog"></MessageDialog>
+<MessageDialog @ref="messageDialogService.messageDialog"></MessageDialog>
 
 @code {
 	Product MyProduct = new Product();
 	string ImageUploadMessage = "";
+	protected async override Task OnInitializedAsync()
+	{
+		await CategoryService.GetAllCategories();
+		CategoryService.CategoryAction += StateHasChanged;
+		messageDialogService.Action += StateHasChanged;
+	}
 	async Task HandleSaveProduct()
 	{
-		ShowSaveButton = false;
-		ShowBusyButton = !ShowSaveButton;
+		messageDialogService.ShowSaveButton = false;
+		messageDialogService.ShowBusyButton = !messageDialogService.ShowSaveButton;
 		if (string.IsNullOrEmpty(MyProduct.Base64Img))
 		{
-			messageDialog!.SetDialogValues("warning", "You need to choose image");
-			SetMessageDialog();
+			messageDialogService.messageDialog!.SetDialogValues("warning", "You need to choose image");
+			messageDialogService.SetMessageDialog();
 			return;
 		}
 
-		var (flag, message) = await ClientService.AddProduct(MyProduct);
+		var (flag, message) = await ProductService.AddProduct(MyProduct);
 		if (flag)
-			messageDialog!.SetDialogValues("success", message);
+			messageDialogService.messageDialog!.SetDialogValues("success", message);
 		else
-			messageDialog!.SetDialogValues("danger", message);
-
-		SetMessageDialog();
+			messageDialogService.messageDialog!.SetDialogValues("danger", message);
+		messageDialogService.SetMessageDialog();
 		return;
 
 	}
@@ -93,15 +113,9 @@
 		return;
 	}
 
-	MessageDialog? messageDialog;
-	public bool ShowBusyButton { get; set; }
-	public bool ShowSaveButton { get; set; } = true;
-
-	private async void SetMessageDialog()
+	public void Dispose()
 	{
-		await messageDialog!.ShowMessage();
-		ShowBusyButton = false;
-		ShowSaveButton = !ShowBusyButton;
-		StateHasChanged();
+		CategoryService.CategoryAction -= StateHasChanged;
+		messageDialogService.Action -= StateHasChanged;
 	}
 }

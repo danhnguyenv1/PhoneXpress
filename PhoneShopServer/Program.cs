@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PhoneXpressServer.Data;
 using PhoneXpressServer.Repositories;
+using PhoneXpressServer.Services;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,6 +22,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 });
 builder.Services.AddScoped<IProduct, ProductServices>();
 builder.Services.AddScoped<ICategory, CategoryService>();
+builder.Services.AddScoped<IUserAccount, UserAccountService>();
 
 //Ending ... 
 

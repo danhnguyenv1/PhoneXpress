@@ -17,4 +17,8 @@
     <ProjectReference Include="..\PhoneXpressSharedLibrary\PhoneXpressSharedLibrary.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Authentication\" />
+  </ItemGroup>
+
 </Project>

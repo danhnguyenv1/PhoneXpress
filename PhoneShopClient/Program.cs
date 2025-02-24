@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using PhoneXpressClient;
+using PhoneXpressClient.Authentication;
 using PhoneXpressClient.Services;
 using Syncfusion.Blazor;
 
@@ -15,6 +16,8 @@ builder.Services.AddSyncfusionBlazor();
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 builder.Services.AddScoped<IProductService, ClientServices>();
 builder.Services.AddScoped<ICategoryService, ClientServices>();
+
 builder.Services.AddScoped<MessageDialogSerrvice>();
+builder.Services.AddScoped<AuthenticationService>();
 await builder.Build().RunAsync();
 

@@ -1,4 +1,8 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using PhoneXpressServer.Data;
 using PhoneXpressServer.Repositories;
 using PhoneXpressServer.Services;
@@ -24,6 +28,25 @@ builder.Services.AddScoped<IProduct, ProductServices>();
 builder.Services.AddScoped<ICategory, CategoryService>();
 builder.Services.AddScoped<IUserAccount, UserAccountService>();
 
+// Add authentication
+var secretKey = builder.Configuration["Jwt:SecretKey"];
+var key = Encoding.UTF8.GetBytes(secretKey);
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(key),
+        };
+    });
+
+builder.Services.AddAuthorization();
+
 //Ending ... 
 
 
@@ -41,6 +64,7 @@ app.UseHttpsRedirection();
 app.UseBlazorFrameworkFiles();
 app.UseStaticFiles();
 app.MapRazorPages();
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapFallbackToFile("index.html");
 app.MapControllers();

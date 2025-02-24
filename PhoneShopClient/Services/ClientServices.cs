@@ -1,14 +1,16 @@
 ﻿using System.Net.WebSockets;
+using PhoneXpressSharedLibrary.Dtos;
 using PhoneXpressSharedLibrary.Models;
 using PhoneXpressSharedLibrary.Responses;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace PhoneXpressClient.Services
 {
-    public class ClientServices(HttpClient httpClient) : IProductService, ICategoryService
+    public class ClientServices(HttpClient httpClient) : IProductService, ICategoryService, IUserAccountService
     {
         public const string ProductBaseUrl = "api/product";
         public const string CategoryBaseUrl = "api/category";
+        public const string AuthenticationBaseUrl = "api/account";
 
         public Action? CategoryAction { get; set; }
         public List<Category> AllCategories { get; set; }
@@ -135,6 +137,32 @@ namespace PhoneXpressClient.Services
                 return new ServiceResponse(true, null!);
         }
 
-        private async Task<string> ReadContent(HttpResponseMessage response) => await response.Content.ReadAsStringAsync();
+        private async Task<string> ReadContent(HttpResponseMessage response) =>
+            await response.Content.ReadAsStringAsync();
+
+
+        //Authentication
+        public async Task<ServiceResponse> Register(UserDTO model)
+        {
+            var response = await httpClient.PostAsync($"{AuthenticationBaseUrl}/register",
+                General.GenerateStringContent(General.SerializeObj(model)));
+            var result = CheckResponse(response);
+            if (!result.Flag)
+                return result;
+
+            var apiResponse = await ReadContent(response);
+            return General.DeserializeJsonString<ServiceResponse>(apiResponse);
+        }
+
+        public async Task<LoginResponse> Login(UserDTO model)
+        {
+
+            var response = await httpClient.PostAsync($"{AuthenticationBaseUrl}/login", General.GenerateStringContent(General.SerializeObj(model)));
+            if (!response.IsSuccessStatusCode)
+                return new LoginResponse(false, "Error occured", null!, null!);
+            
+            var apiResponse = await ReadContent(response);
+            return General.DeserializeJsonString<LoginResponse>(apiResponse);
+        }
     }
 }

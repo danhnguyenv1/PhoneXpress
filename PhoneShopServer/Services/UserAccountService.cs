@@ -1,21 +1,57 @@
-﻿using System.Security.Cryptography;
+﻿using System.Data;
+using System.IdentityModel.Tokens.Jwt;
+using System.Net.WebSockets;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using PhoneXpressServer.Data;
 using PhoneXpressSharedLibrary.Dtos;
 using PhoneXpressSharedLibrary.Responses;
 
 namespace PhoneXpressServer.Services
 {
-    public class UserAccountService(AppDbContext appDbContext) : IUserAccount
+    public class UserAccountService(AppDbContext appDbContext, IConfiguration _configuration) : IUserAccount
     {
-        public Task<LoginResponse> GetRefreshToken(PostRefreshTokenDTO model)
+        public async Task<LoginResponse> GetRefreshToken(PostRefreshTokenDTO model)
         {
-            throw new NotImplementedException();
+            var normalToken = model.RefreshToken;
+
+            var getToken = await appDbContext.TokenInfo
+                .FirstOrDefaultAsync(x => x.RefreshToken == normalToken);
+            if (getToken is null) return null;
+
+            //Generate new token
+            var (newAccessToken, NewRefreshToken) = await GenerateTokens(getToken.UserId);
+
+            //Add or update Token info
+            await SaveToTokenInfo(getToken.UserId, newAccessToken, NewRefreshToken);
+            return new LoginResponse(true, "refresh-token-completed", newAccessToken, NewRefreshToken);
         }
 
-        public Task<UserSession> GetUserByToken(string token)
+        public async Task<UserSession> GetUserByToken(string token)
         {
-            throw new NotImplementedException();
+            var result = await appDbContext.TokenInfo
+                .FirstOrDefaultAsync(_ => _.AccessToken!.Equals(token));
+            if (result is null) return null!;
+
+            var getUserInfo = await appDbContext.UserAccounts
+                .FirstOrDefaultAsync(_ => _.Id == result.UserId);
+            if (getUserInfo is null) return null!;
+
+            if (result.ExpiryDate < DateTime.Now) return null!;
+            var getUserRole = await appDbContext.UserRoles
+                .FirstOrDefaultAsync(_ => _.UserId == getUserInfo.Id);
+            if (getUserRole is null) return null!;
+
+            var roleName = await appDbContext.SystemRoles
+                .FirstOrDefaultAsync(_ => _.Id == getUserRole.RoleId);
+            if (roleName is null) return null!;
+
+            return new UserSession()
+            { Email = getUserInfo.Email, Name = getUserInfo.Name, Role = roleName.Name };
         }
 
         public async Task<LoginResponse> Login(LoginDTO model)
@@ -29,7 +65,7 @@ namespace PhoneXpressServer.Services
             if (!BCrypt.Net.BCrypt.Verify(model!.Password, findUser.Password))
                 return new LoginResponse(false, "Invalid UserName/Password");
 
-            var (accessToken, refreshToken) = await GenerateTokens();
+            var (accessToken, refreshToken) = await GenerateTokens(findUser.Id);
             // add or update Token info
             await SaveToTokenInfo(findUser.Id, accessToken, refreshToken);
             return new LoginResponse(true, "Login Successfull", accessToken, refreshToken);
@@ -55,14 +91,25 @@ namespace PhoneXpressServer.Services
             }
         }
 
-        private async Task<(string AccessToken, string RefreshToken)> GenerateTokens()
+        private async Task<(string AccessToken, string RefreshToken)> GenerateTokens(int userId)
         {
-            string accessToken = GenerateToken(256);
-            string refreshToken = GenerateToken(64);
-            while (!await VerifyToken(accessToken))
-                accessToken = GenerateToken(256);
-            while (!await VerifyToken(refreshToken))
-                refreshToken = GenerateToken(256);
+            var secretKey = _configuration["Jwt:SecretKey"];
+            var key = Encoding.UTF8.GetBytes(secretKey!);
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[]
+                {
+                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+            }),
+                Expires = DateTime.UtcNow.AddHours(1),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            string accessToken = tokenHandler.WriteToken(token);
+            string refreshToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
+
             return (accessToken, refreshToken);
         }
 

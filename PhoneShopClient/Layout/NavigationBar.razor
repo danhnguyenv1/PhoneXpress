@@ -3,6 +3,13 @@
 		<a class="navbar-brand" href="#">
 			<i class="fa fa-cart-shopping text-danger"></i>
 			<span class="small text-danger fw-bold">1</span>
+			<h6>
+				Hello,
+				<AuthorizeView>
+					<Authorized> @context.User.Identity.Name</Authorized>
+					<NotAuthorized>Guest</NotAuthorized>
+				</AuthorizeView>
+			</h6>
 		</a>
 		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-expanded="false">
 			<span class="navbar-toggler-icon"></span>
@@ -13,7 +20,7 @@
 					<a class="nav-link active" aria-current="page" href="#">HOME</a>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link d-flex align-items-center" href="/front">PRODUCTS</a>
+					<a class="nav-link d-flex align-items-center" href="/products">PRODUCTS</a>
 				</li>
 				<li class="nav-item">
 					<a class="nav-link d-flex align-items-center">SERVICES</a>
@@ -28,11 +35,27 @@
 					<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
 						ACCOUNT
 					</a>
-					<ul class="dropdown-menu" aria-labelledby="navbarDowndown" style="font-family:sans-serif">
-						<li><a class="dropdown-item" href="#">Action</a></li>
-						<li><a class="dropdown-item" href="#">Another Action</a></li>
-						<li><hr class="dropdown-divider" href="#"></li>
-						<li><a class="dropdown-item" href="#">Something else here</a></li>
+					<ul class="dropdown-menu" aria-labelledby="navbarDropdown" style="font-family:sans-serif">
+						<AuthorizeView>
+							<Authorized>
+								<li>
+									<button class="btn btn-danger btn-none"> <i class="fa fa-lock-open"></i> Logout </button>
+								</li>
+							</Authorized>
+							<NotAuthorized>
+								@{
+									string register = "register";
+									string login = "login";
+								}
+								<li>
+									<button class="btn btn-none" @onclick="() => NavigateTo(login)"> <i class="fa fa-lock"></i> Login</button>
+								</li>
+								<li><hr class="dropdown-divider"></li>
+								<li>
+									<button class="btn btn-none" @onclick="() => NavigateTo(register)"> <i class="fa fa-sign-in-alt"></i>Register</button>
+								</li>
+							</NotAuthorized>
+						</AuthorizeView>
 					</ul>
 				</li>
 			</ul>
@@ -57,5 +80,10 @@
 	{
 		ShowSearch = true;
 		ShowSearchIcon = !ShowSearch;
+	}
+
+	void NavigateTo(string url)
+	{
+		NavManager.NavigateTo($"identity/account/{url}");
 	}
 }

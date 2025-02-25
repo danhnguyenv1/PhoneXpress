@@ -1,4 +1,5 @@
 ﻿using System.Net.WebSockets;
+using PhoneXpressClient.Authentication;
 using PhoneXpressSharedLibrary.Dtos;
 using PhoneXpressSharedLibrary.Models;
 using PhoneXpressSharedLibrary.Responses;
@@ -6,7 +7,7 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace PhoneXpressClient.Services
 {
-    public class ClientServices(HttpClient httpClient) : IProductService, ICategoryService, IUserAccountService
+    public class ClientServices(HttpClient httpClient, AuthenticationService authenticationService) : IProductService, ICategoryService, IUserAccountService
     {
         public const string ProductBaseUrl = "api/product";
         public const string CategoryBaseUrl = "api/category";
@@ -22,7 +23,9 @@ namespace PhoneXpressClient.Services
         //Products
         public async Task<ServiceResponse> AddProduct(Product model)
         {
-            var response = await httpClient.PostAsync(ProductBaseUrl, General.GenerateStringContent(General.SerializeObj(model)));
+            await authenticationService.GetUserDetails();
+            var privateHttpClient = await authenticationService.AddHeaderToHttpClient();
+            var response = await privateHttpClient.PostAsync(ProductBaseUrl, General.GenerateStringContent(General.SerializeObj(model)));
 
             var result = CheckResponse(response);
             if (!result.Flag)
@@ -94,7 +97,9 @@ namespace PhoneXpressClient.Services
         //Categorie
         public async Task<ServiceResponse> AddCategory(Category model)
         {
-            var response = await httpClient.PostAsync(CategoryBaseUrl, General.GenerateStringContent(General.SerializeObj(model)));
+            await authenticationService.GetUserDetails();
+            var privateHttpClient = await authenticationService.AddHeaderToHttpClient();
+            var response = await privateHttpClient.PostAsync(CategoryBaseUrl, General.GenerateStringContent(General.SerializeObj(model)));
 
             var result = CheckResponse(response);
             if (!result.Flag)
@@ -154,7 +159,7 @@ namespace PhoneXpressClient.Services
             return General.DeserializeJsonString<ServiceResponse>(apiResponse);
         }
 
-        public async Task<LoginResponse> Login(UserDTO model)
+        public async Task<LoginResponse> Login(LoginDTO model)
         {
 
             var response = await httpClient.PostAsync($"{AuthenticationBaseUrl}/login", General.GenerateStringContent(General.SerializeObj(model)));

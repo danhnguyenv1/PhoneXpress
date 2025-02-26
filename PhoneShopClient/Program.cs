@@ -19,6 +19,7 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 builder.Services.AddScoped<IProductService, ClientServices>();
 builder.Services.AddScoped<ICategoryService, ClientServices>();
 builder.Services.AddScoped<IUserAccountService, ClientServices>();
+builder.Services.AddScoped<ICart, ClientServices>();
 
 builder.Services.AddScoped<MessageDialogSerrvice>();
 builder.Services.AddScoped<AuthenticationService>();

@@ -31,8 +31,12 @@ namespace PhoneXpressServer.Repositories
         public async Task<List<Product>> GetAllProducts(bool onlyFeatured)
         {
             return onlyFeatured
-                ? await appDbContext.Products.Where(p => p.Featured).ToListAsync()
-                : await appDbContext.Products.ToListAsync();
+                ? await appDbContext.Products
+                    .Where(p => p.Featured)
+                    .Include(_ => _.Category).ToListAsync()
+                : await appDbContext.Products
+                    .Include(_ => _.Category)
+                    .ToListAsync();
         }
 
         private async Task<ServiceResponse> CheckName(string name)

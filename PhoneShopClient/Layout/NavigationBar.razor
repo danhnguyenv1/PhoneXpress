@@ -1,8 +1,11 @@
-﻿<nav class="navbar navbar-expand-lg navbar-light bg-light">
+﻿@using PhoneXpressClient.Authentication
+@implements IDisposable
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
 	<div class="container-fluid">
-		<a class="navbar-brand" href="#">
+		<a class="navbar-brand" @onclick="GoToCartPage" style="cursor:pointer">
 			<i class="fa fa-cart-shopping text-danger"></i>
-			<span class="small text-danger fw-bold">1</span>
+			<span class="small text-danger fw-bold">@CartService.CartCount</span>
 			<h6>
 				Hello,
 				<AuthorizeView>
@@ -17,19 +20,10 @@
 		<div class="collapse navbar-collapse fw-bold" id="navbarSupportedContent" style="margin-left:25vw">
 			<ul class="navbar-nav me-auto mb-2 mb-lg-0" style="font-family: 'Impact', 'Haettenschweiler', sans-serif;">
 				<li class="nav-item">
-					<a class="nav-link active" aria-current="page" href="#">HOME</a>
+					<a class="nav-link active" aria-current="page" style="margin-right:20px" href="/">HOME</a>
 				</li>
 				<li class="nav-item">
 					<a class="nav-link d-flex align-items-center" href="/products">PRODUCTS</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link d-flex align-items-center">SERVICES</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link">TESTIMONIALS</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link">CONTACT</a>
 				</li>
 				<li class="nav-item dropdown">
 					<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -39,7 +33,7 @@
 						<AuthorizeView>
 							<Authorized>
 								<li>
-									<button class="btn btn-danger btn-none"> <i class="fa fa-lock-open"></i> Logout </button>
+									<button class="btn btn-danger btn-none" @onclick="Logout"> <i class="fa fa-lock-open"></i> Logout </button>
 								</li>
 							</Authorized>
 							<NotAuthorized>
@@ -76,6 +70,12 @@
 @code {
 	public bool ShowSearch { get; set; }
 	public bool ShowSearchIcon { get; set; } = true;
+
+	protected override async void OnInitialized()
+	{
+		await CartService.GetCartCount();
+		messageDialogService.Action += StateHasChanged;
+	}
 	void SearchClicked()
 	{
 		ShowSearch = true;
@@ -85,5 +85,23 @@
 	void NavigateTo(string url)
 	{
 		NavManager.NavigateTo($"identity/account/{url}");
+	}
+
+	void GoToCartPage()
+	{
+		NavManager.NavigateTo("shopping/cart/my-cart");
+	}
+
+	private async Task Logout()
+	{
+		var logoutModel = new TokenProp();
+		var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthStateProvider;
+		await customAuthStateProvider.UpdateAuthenticationState(logoutModel);
+		NavManager.NavigateTo("/", forceLoad: true);
+	}
+
+	public void Dispose()
+	{
+		messageDialogService.Action -= StateHasChanged;
 	}
 }

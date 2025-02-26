@@ -1,13 +1,20 @@
-﻿using System.Net.WebSockets;
+﻿using System.Formats.Asn1;
+using System.Net.WebSockets;
+using System.Xml.Linq;
+using Blazored.LocalStorage;
 using PhoneXpressClient.Authentication;
+using PhoneXpressClient.PrivateModels;
 using PhoneXpressSharedLibrary.Dtos;
 using PhoneXpressSharedLibrary.Models;
 using PhoneXpressSharedLibrary.Responses;
+using static System.Net.Mime.MediaTypeNames;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace PhoneXpressClient.Services
 {
-    public class ClientServices(HttpClient httpClient, AuthenticationService authenticationService) : IProductService, ICategoryService, IUserAccountService
+    public class ClientServices(HttpClient httpClient,
+        AuthenticationService authenticationService,
+        ILocalStorageService localStorageService) : IProductService, ICategoryService, IUserAccountService, ICart
     {
         public const string ProductBaseUrl = "api/product";
         public const string CategoryBaseUrl = "api/category";
@@ -19,6 +26,9 @@ namespace PhoneXpressClient.Services
         public List<Product> AllProducts { get; set; }
         public List<Product> FeaturedProducts { get; set; }
         public List<Product> ProductsByCategory { get; set; }
+        public Action? CartAction { get; set; }
+        public int CartCount { get; set; }
+        public bool IsCartLoaderVisible { get; set; }
 
         //Products
         public async Task<ServiceResponse> AddProduct(Product model)
@@ -146,7 +156,7 @@ namespace PhoneXpressClient.Services
             await response.Content.ReadAsStringAsync();
 
 
-        //Authentication
+        //Account/Authentication Service
         public async Task<ServiceResponse> Register(UserDTO model)
         {
             var response = await httpClient.PostAsync($"{AuthenticationBaseUrl}/register",
@@ -165,9 +175,99 @@ namespace PhoneXpressClient.Services
             var response = await httpClient.PostAsync($"{AuthenticationBaseUrl}/login", General.GenerateStringContent(General.SerializeObj(model)));
             if (!response.IsSuccessStatusCode)
                 return new LoginResponse(false, "Error occured", null!, null!);
-            
+
             var apiResponse = await ReadContent(response);
             return General.DeserializeJsonString<LoginResponse>(apiResponse);
         }
+
+        //Cart Service
+
+        public async Task GetCartCount()
+        {
+            string cartString = await GetCartFromLocalStorage();
+            if (string.IsNullOrEmpty(cartString))
+                CartCount = 0;
+            else
+                CartCount = General.DeserializeJsonStringList<StorageCart>(cartString).Count;
+            CartAction?.Invoke();
+        }
+
+        public async Task<ServiceResponse> AddToCart(Product model, int updateQuantity = 1)
+        {
+
+            string message = string.Empty;
+            var MyCart = new List<StorageCart>();
+            var getCartFromStrorage = await GetCartFromLocalStorage();
+            if (!string.IsNullOrEmpty(getCartFromStrorage))
+            {
+                MyCart = (List<StorageCart>)General.DeserializeJsonStringList<StorageCart>(getCartFromStrorage);
+                var checkIfAddedAlready = MyCart.FirstOrDefault(_ => _.ProductId == model.Id);
+                if (checkIfAddedAlready is null)
+                {
+                    MyCart.Add(new StorageCart() { ProductId = model.Id, Quantity = 1 });
+                    message = "Product Added to Cart";
+                }
+                else
+                {
+                    var updatedProduct = new StorageCart() { Quantity = updateQuantity, ProductId = model.Id };
+                    MyCart.Remove(checkIfAddedAlready!);
+                    MyCart.Add(updatedProduct);
+                    message = "Product Updated";
+                }
+            }
+            else
+            {
+                MyCart.Add(new StorageCart() { ProductId = model.Id, Quantity = 1 });
+                message = "Product Added to Cart";
+            }
+            await RemoveCartFromLocalStorage();
+            await SetCartToLocalStorage(General.SerializeObj(MyCart));
+            await GetCartCount();
+            return new ServiceResponse(true, message);
+        }
+
+        public async Task<List<Order>> MyOrders()
+        {
+            IsCartLoaderVisible = true;
+            var cartList = new List<Order>();
+            string myCartString = await GetCartFromLocalStorage();
+            if (string.IsNullOrEmpty(myCartString)) return null!;
+
+            var myCartList = General.DeserializeJsonStringList<StorageCart>(myCartString);
+            await GetAllProducts(false);
+            foreach (var cartItem in myCartList)
+            {
+                var product = AllProducts.FirstOrDefault(_ => _.Id == cartItem.ProductId);
+                cartList.Add(new Order()
+                {
+                    Id = product!.Id,
+                    Name = product.Name,
+                    Quantity = cartItem.Quantity,
+                    Price = product.Price,
+                    Image = product.Base64Img,
+                });
+            }
+            IsCartLoaderVisible = false;
+            await GetCartCount();
+            return cartList;
+        }
+
+        public async Task<ServiceResponse> DeleteCart(Order cart)
+        {
+            var myCartList = General.DeserializeJsonStringList<StorageCart>(await GetCartFromLocalStorage()); if (myCartList is null)
+                return new ServiceResponse(false, "Product not found");
+
+            myCartList.Remove(myCartList.FirstOrDefault(_ => _.ProductId == cart.Id)!);
+            await RemoveCartFromLocalStorage();
+            await SetCartToLocalStorage(General.SerializeObj(myCartList));
+            await GetCartCount();
+            return new ServiceResponse(true, "Product removed successfully");
+        }
+
+        private async Task<string> GetCartFromLocalStorage() => await localStorageService.GetItemAsStringAsync("cart");
+
+        private async Task SetCartToLocalStorage(string cart) => await localStorageService.SetItemAsStringAsync("cart", cart);
+
+        private async Task RemoveCartFromLocalStorage() => await localStorageService.RemoveItemAsync("cart");
     }
 }

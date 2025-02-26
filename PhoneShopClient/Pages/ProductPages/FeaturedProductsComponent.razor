@@ -20,7 +20,7 @@
 									{
 										<span class="badge bg-primary d-flex align-items-end float-end" style="width:50px; height:20px;">New</span>
 									}
-									<img class="card-img-top childImage" src="@item.Base64Img" width="150" height="200" style="max-width:150px;min-width:150px" />
+									<img class="card-img-top childImage" src="@item.Base64Img" width="150" height="200" style="max-width:150px;min-width:150px" @onclick="()=> ViewProduct(item)" />
 									<div id="productCover" class="bg-secondary text-white d-flex justify-content-center text-wrap">@item.Name</div>
 								</div>
 							</div>
@@ -112,6 +112,11 @@
 		var getPreviousProducts = await SkipAndTake(Skip - (PageSize * 2), Take);
 		Skip -= PageSize;
 		AddToFeaturedProducts(getPreviousProducts);
+	}
+
+	void ViewProduct(Product product)
+	{
+		NavManager.NavigateTo($"/products/{product.Id}");
 	}
 
 	public void Dispose()

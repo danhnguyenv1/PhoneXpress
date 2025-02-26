@@ -1,4 +1,5 @@
 ﻿@page "/products"
+@page "/products/{id:int}"
 @implements IDisposable
 
 
@@ -11,7 +12,14 @@
 			<BannerPage />
 			<div class="card border-0">
 				<div class="card-header border-success-subtle mb-2"></div>
-				<ProductListPage AllProducts="ProductService.ProductsByCategory?? ProductService.AllProducts" />
+				@if (ShowProductList)
+				{
+					<ProductListPage AllProducts="ProductService.ProductsByCategory?? ProductService.AllProducts" HandleProductDetailsEvent="HandleProductDetailsEvent" />
+				}
+				@if (ShowProductDetails)
+				{
+					<ProductDetails HandleBackClickedEvent="HandleBackClickedEvent" Product="ProductDetails"></ProductDetails>
+				}
 			</div>
 
 		</div>
@@ -19,6 +27,11 @@
 </div>
 
 @code {
+	[Parameter]
+	public int Id { get; set; } = 0;
+	public bool ShowProductList { get; set; } = true;
+	public bool ShowProductDetails { get; set; } = false;
+	public Product ProductDetails { get; set; } = new();
 	protected async override Task OnInitializedAsync()
 	{
 		await LoadData();
@@ -41,6 +54,29 @@
 	{
 		bool featured = false;
 		await ProductService.GetAllProducts(featured);
+	}
+
+	void HandleBackClickedEvent()
+	{
+		ShowProductDetails = false;
+		ShowProductList = true;
+	}
+
+	void HandleProductDetailsEvent(Product viewProduct)
+	{
+		ProductDetails = viewProduct;
+		ShowProductDetails = true;
+		ShowProductList = false;
+	}
+
+	protected override void OnParametersSet()
+	{
+		if (Id > 0)
+		{
+			ProductDetails = ProductService.AllProducts.FirstOrDefault(_ => _.Id == Id)!;
+			ShowProductDetails = true;
+			ShowProductList = false;
+		}
 	}
 
 	public void Dispose()

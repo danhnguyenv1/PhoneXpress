@@ -40,7 +40,7 @@ namespace PhoneXpressServer.Controllers
         }
 
 
-        [HttpPost("refresh_token")]
+        [HttpPost("refresh-token")]
         public async Task<ActionResult<LoginResponse>> RefreshToken(PostRefreshTokenDTO model)
         {
             if (model is null) return Unauthorized();

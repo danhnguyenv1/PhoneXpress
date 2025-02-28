@@ -13,5 +13,6 @@ namespace PhoneXpressClient.Services
         Task<List<Order>> MyOrders();
         Task<ServiceResponse> DeleteCart(Order cart);
         bool IsCartLoaderVisible { get; set; }
+        Task<string> Checkout(List<Order> cartItems);
     }
 }

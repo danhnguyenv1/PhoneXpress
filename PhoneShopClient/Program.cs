@@ -6,11 +6,14 @@ using PhoneXpressClient;
 using PhoneXpressClient.Authentication;
 using PhoneXpressClient.Services;
 using Syncfusion.Blazor;
+using Syncfusion.Licensing;
+
 
 //Register Syncfusion license
 Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("MzcyMzU5N0AzMjM4MmUzMDJlMzBaR3NDVWp5dHB4NldjenFtVnJFdHlsSkFWaTNsdmxnTGZvanl3c2hTTFlJPQ==");
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
+
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 builder.Services.AddSyncfusionBlazor();
@@ -25,7 +28,7 @@ builder.Services.AddScoped<MessageDialogSerrvice>();
 builder.Services.AddScoped<AuthenticationService>();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
 builder.Services.AddAuthorizationCore();
-
 builder.Services.AddBlazoredLocalStorage();
+
 await builder.Build().RunAsync();
 

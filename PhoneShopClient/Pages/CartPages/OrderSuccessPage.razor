@@ -1,0 +1,60 @@
+﻿@page "/order-success"
+
+<div class="order-success-container">
+	<div class="success-card">
+		<img src="https://cdn-icons-png.flaticon.com/512/190/190411.png" alt="Success Icon" class="success-icon">
+		<h1>Thank You for Your Order! 🎉</h1>
+		<p>We truly appreciate your trust in us. Your order is being processed and will be on its way soon.</p>
+		<a href="/" class="btn-home">Back to Home</a>
+	</div>
+</div>
+
+<style>
+	.order-success-container {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		height: 100vh;
+		background-color: #f9f9f9;
+	}
+
+	.success-card {
+		text-align: center;
+		background: white;
+		padding: 30px;
+		border-radius: 12px;
+		box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+		max-width: 500px;
+	}
+
+	.success-icon {
+		width: 80px;
+		margin-bottom: 20px;
+	}
+
+	h1 {
+		color: #28a745;
+		font-size: 24px;
+		margin-bottom: 10px;
+	}
+
+	p {
+		color: #555;
+		font-size: 16px;
+		margin-bottom: 20px;
+	}
+
+	.btn-home {
+		display: inline-block;
+		padding: 10px 20px;
+		background: #28a745;
+		color: white;
+		text-decoration: none;
+		border-radius: 5px;
+		font-size: 16px;
+	}
+
+		.btn-home:hover {
+			background: #218838;
+		}
+</style>

@@ -20,7 +20,7 @@ namespace PhoneXpressServer.Controllers
         }
 
         [HttpPost]
-        //[Authorize]
+        [Authorize]
         public async Task<ActionResult<ServiceResponse>> AddCategory(Category model)
         {
             if (model == null) return BadRequest("Model is null");

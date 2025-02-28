@@ -4,7 +4,6 @@ using System.Net.WebSockets;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using PhoneXpressServer.Data;
@@ -113,27 +112,6 @@ namespace PhoneXpressServer.Services
 
             return (accessToken, refreshToken);
         }
-
-
-        private async Task<bool> VerifyToken(string refreshToken = null!, string accessToken = null!)
-        {
-            TokenInfo tokenInfo = new();
-            if (!string.IsNullOrEmpty(refreshToken))
-            {
-                var getRefreshToken = await appDbContext.TokenInfo
-                    .FirstOrDefaultAsync(_ => _.RefreshToken!.Equals(refreshToken));
-                return getRefreshToken is null;
-            }
-            else
-            {
-                var getAccessToken = await appDbContext.TokenInfo
-                .FirstOrDefaultAsync(_ => _.AccessToken!.Equals(accessToken));
-                return getAccessToken is null;
-            }
-        }
-
-        private static string GenerateToken(int numberOfBytes) =>
-            Convert.ToBase64String(RandomNumberGenerator.GetBytes(numberOfBytes));
 
         public async Task<ServiceResponse> Register(UserDTO model)
         {

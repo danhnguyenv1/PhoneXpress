@@ -27,6 +27,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<IProduct, ProductServices>();
 builder.Services.AddScoped<ICategory, CategoryService>();
 builder.Services.AddScoped<IUserAccount, UserAccountService>();
+builder.Services.AddScoped<IPayment, PaymentService>();
 
 // Add authentication
 var secretKey = builder.Configuration["Jwt:SecretKey"];

@@ -24,7 +24,7 @@ else
 						</span>
 					</div>
 					<div class="card-footer">
-						<button class="btn btn-lg btn-danger">
+						<button class="btn btn-lg btn-danger" @onclick="Checkout">
 							<i class="fa fa-cart-arrow-down"></i> Proceed to Checkout
 						</button>
 					</div>
@@ -60,7 +60,7 @@ else
 											<td>@item.Price</td>
 											<td>
 												<input type="number" min="1" class="form-control w-25" value="@item.Quantity"
-													   @onchange="@(e => HandleChange(e, item))" />
+												@onchange="@(e => HandleChange(e, item))" />
 											</td>
 											<td>@item.SubTotal</td>
 											<td>
@@ -89,7 +89,7 @@ else
 
 <style>
 	#changeCursor {
-		cursor: pointer
+	cursor: pointer
 	}
 </style>
 
@@ -147,6 +147,15 @@ else
 	{
 		SkipValue = (args.CurrentPage + Page!.PageSize) - Page.PageSize;
 		TakeValue = Page.PageSize;
+	}
+
+	async Task Checkout()
+	{
+		if (MyCartOrders is null)
+			DisplayResponse(new ServiceResponse(false, " Sorry please add item to cart first"));
+
+			var url = await CartService.Checkout(MyCartOrders!);
+			NavManager.NavigateTo(url);
 	}
 
 	public void Dispose()

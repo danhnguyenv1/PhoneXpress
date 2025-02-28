@@ -1,14 +1,9 @@
-﻿using System.Formats.Asn1;
-using System.Net.WebSockets;
-using System.Xml.Linq;
-using Blazored.LocalStorage;
+﻿using Blazored.LocalStorage;
 using PhoneXpressClient.Authentication;
 using PhoneXpressClient.PrivateModels;
 using PhoneXpressSharedLibrary.Dtos;
 using PhoneXpressSharedLibrary.Models;
 using PhoneXpressSharedLibrary.Responses;
-using static System.Net.Mime.MediaTypeNames;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace PhoneXpressClient.Services
 {
@@ -269,5 +264,15 @@ namespace PhoneXpressClient.Services
         private async Task SetCartToLocalStorage(string cart) => await localStorageService.SetItemAsStringAsync("cart", cart);
 
         private async Task RemoveCartFromLocalStorage() => await localStorageService.RemoveItemAsync("cart");
+
+
+        public async Task<string> Checkout(List<Order> cartItems)
+        {
+            var response = await httpClient.PostAsync("api/payment/checkout",
+                General.GenerateStringContent(General.SerializeObj(cartItems)));
+
+            var url = await response.Content.ReadAsStringAsync();
+            return url;
+        }
     }
 }

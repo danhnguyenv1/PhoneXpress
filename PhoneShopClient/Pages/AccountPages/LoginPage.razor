@@ -58,6 +58,11 @@
 
 			NavManager.NavigateTo("/", forceLoad: true);
 		}
+		else
+		{
+			messageDialogService.messageDialog!.SetDialogValues("danger", result.Message!);
+			messageDialogService.SetMessageDialog();
+		}
 	}
 
 	public void Dispose()

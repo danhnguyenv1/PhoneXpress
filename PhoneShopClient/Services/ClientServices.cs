@@ -92,11 +92,8 @@ namespace PhoneXpressClient.Services
         public Product GetRandomProduct()
         {
             if (FeaturedProducts is null) return null!;
-            Random RandomNumbers = new();
-            int minimumNumber = FeaturedProducts.Min(_ => _.Id);
-            int maximumNumber = FeaturedProducts.Max(_ => _.Id) + 1;
-            int result = RandomNumbers.Next(minimumNumber, maximumNumber);
-            return FeaturedProducts.FirstOrDefault(_ => _.Id == result)!;
+            Random random = new();
+            return FeaturedProducts.ElementAt(random.Next(0, FeaturedProducts.Count));
         }
 
         //Categorie

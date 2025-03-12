@@ -28,7 +28,7 @@ namespace PhoneXpressClient.Authentication
         public async Task UpdateAuthenticationState(TokenProp tokenProp)
         {
             ClaimsPrincipal claimsPrincipal = new();
-            if (tokenProp is not null || !string.IsNullOrEmpty(tokenProp!.Token))
+            if (tokenProp is not null && !string.IsNullOrEmpty(tokenProp.Token))
             {
                 await authenticationService.SetTokenToLocalStorage(General.SerializeObj(tokenProp));
                 var getUserSession = await authenticationService.GetUserDetails();

@@ -53,6 +53,8 @@ namespace PhoneXpressServer.Services
 
         private async Task<(string AccessToken, string RefreshToken)> GenerateTokens(int userId)
         {
+            var role = await GetUserRole(userId);
+
             var secretKey = _configuration["Jwt:SecretKey"];
             var key = Encoding.UTF8.GetBytes(secretKey!);
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -60,8 +62,9 @@ namespace PhoneXpressServer.Services
             {
                 Subject = new ClaimsIdentity(new[]
                 {
-                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-            }),
+                    new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+                    new Claim(ClaimTypes.Role, role!)
+                }),
                 Expires = DateTime.UtcNow.AddMinutes(1),
                 //Expires = DateTime.UtcNow.AddHours(1),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
@@ -142,6 +145,17 @@ namespace PhoneXpressServer.Services
                                .FirstOrDefaultAsync();
 
             return result is null ? null : new UserSession { Email = result.Email, Name = result.Name, Role = result.RoleName };
+        }
+
+        public async Task<string?> GetUserRole(int userId)
+        {
+            var role = await (from ur in appDbContext.UserRoles
+                              join r in appDbContext.SystemRoles on ur.RoleId equals r.Id
+                              where ur.UserId == userId
+                              select r.Name)
+                             .FirstOrDefaultAsync();
+
+            return role;
         }
     }
 }

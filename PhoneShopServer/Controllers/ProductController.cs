@@ -20,7 +20,7 @@ namespace PhoneXpressServer.Controllers
         }
 
         [HttpPost]
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<ServiceResponse>> AddProduct(Product model)
         {
             if (model == null) return BadRequest("Model is null");

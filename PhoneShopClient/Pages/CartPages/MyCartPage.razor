@@ -145,7 +145,7 @@ else
 
 	public void Click(PagerItemClickEventArgs args)
 	{
-		SkipValue = (args.CurrentPage + Page!.PageSize) - Page.PageSize;
+		SkipValue = (args.CurrentPage - 1) * Page!.PageSize;
 		TakeValue = Page.PageSize;
 	}
 

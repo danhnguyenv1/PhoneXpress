@@ -96,7 +96,7 @@ namespace PhoneXpressClient.Services
             return FeaturedProducts.ElementAt(random.Next(0, FeaturedProducts.Count));
         }
 
-        //Categorie
+        //Categories
         public async Task<ServiceResponse> AddCategory(Category model)
         {
             await authenticationService.GetUserDetails();

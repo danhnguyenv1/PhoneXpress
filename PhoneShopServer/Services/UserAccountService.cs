@@ -14,45 +14,6 @@ namespace PhoneXpressServer.Services
 {
     public class UserAccountService(AppDbContext appDbContext, IConfiguration _configuration) : IUserAccount
     {
-        public async Task<LoginResponse> GetRefreshToken(PostRefreshTokenDTO model)
-        {
-            var normalToken = model.RefreshToken;
-
-            var getToken = await appDbContext.TokenInfo
-                .FirstOrDefaultAsync(x => x.RefreshToken == normalToken);
-            if (getToken is null) return null;
-
-            //Generate new token
-            var (newAccessToken, NewRefreshToken) = await GenerateTokens(getToken.UserId);
-
-            //Add or update Token info
-            await SaveToTokenInfo(getToken.UserId, newAccessToken, NewRefreshToken);
-            return new LoginResponse(true, "refresh-token-completed", newAccessToken, NewRefreshToken);
-        }
-
-        public async Task<UserSession> GetUserByToken(string token)
-        {
-            var result = await appDbContext.TokenInfo
-                .FirstOrDefaultAsync(_ => _.AccessToken!.Equals(token));
-            if (result is null) return null!;
-
-            var getUserInfo = await appDbContext.UserAccounts
-                .FirstOrDefaultAsync(_ => _.Id == result.UserId);
-            if (getUserInfo is null) return null!;
-
-            if (result.ExpiryDate < DateTime.Now) return null!;
-            var getUserRole = await appDbContext.UserRoles
-                .FirstOrDefaultAsync(_ => _.UserId == getUserInfo.Id);
-            if (getUserRole is null) return null!;
-
-            var roleName = await appDbContext.SystemRoles
-                .FirstOrDefaultAsync(_ => _.Id == getUserRole.RoleId);
-            if (roleName is null) return null!;
-
-            return new UserSession()
-            { Email = getUserInfo.Email, Name = getUserInfo.Name, Role = roleName.Name };
-        }
-
         public async Task<LoginResponse> Login(LoginDTO model)
         {
             if (model is null)
@@ -65,7 +26,7 @@ namespace PhoneXpressServer.Services
                 return new LoginResponse(false, "Invalid UserName/Password");
 
             var (accessToken, refreshToken) = await GenerateTokens(findUser.Id);
-            // add or update Token info
+            //Add or update Token info
             await SaveToTokenInfo(findUser.Id, accessToken, refreshToken);
             return new LoginResponse(true, "Login Successfull", accessToken, refreshToken);
         }
@@ -101,8 +62,8 @@ namespace PhoneXpressServer.Services
                 {
                 new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
             }),
-                //Expires = DateTime.UtcNow.AddMinutes(1),
-                Expires = DateTime.UtcNow.AddHours(1),
+                Expires = DateTime.UtcNow.AddMinutes(1),
+                //Expires = DateTime.UtcNow.AddHours(1),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
 
@@ -117,53 +78,70 @@ namespace PhoneXpressServer.Services
         {
             if (model is null)
                 return new ServiceResponse(false, "Model is empty");
-            var findUser = await appDbContext.UserAccounts.
-                FirstOrDefaultAsync(_ => _.Email!.ToLower().Equals(model.Email!.ToLower()));
-            if (findUser is not null)
-                return new ServiceResponse(false, "User Registered already");
-            var user = appDbContext.UserAccounts.Add(new UserAccount()
+
+            // Check if the user already exists
+            if (await appDbContext.UserAccounts.AnyAsync(u => u.Email!.ToLower() == model.Email!.ToLower()))
+                return new ServiceResponse(false, "User already registered");
+
+            // Create a new user account
+            var user = new UserAccount
             {
                 Password = BCrypt.Net.BCrypt.HashPassword(model.Password),
                 Name = model.Name,
-                Email = model.Email,
-            }).Entity;
+                Email = model.Email
+            };
 
+            appDbContext.UserAccounts.Add(user);
             await Commit();
 
-            //asign role
-            var checkIfAdminIsCreated = await appDbContext.SystemRoles
-                .FirstOrDefaultAsync(_ => _.Name!.ToLower().Equals("admin"));
+            // Check if "Admin" role exists, otherwise create it
+            var adminRole = await appDbContext.SystemRoles.FirstOrDefaultAsync(r => r.Name.ToLower() == "admin")
+                            ?? appDbContext.SystemRoles.Add(new SystemRole { Name = "Admin" }).Entity;
+            await Commit();
 
-            if (checkIfAdminIsCreated is null)
-            {
-                var result = appDbContext.SystemRoles.Add(new SystemRole() { Name = "Admin" }).Entity;
-                await Commit();
+            // Check if "User" role exists, otherwise create it
+            var userRole = await appDbContext.SystemRoles.FirstOrDefaultAsync(r => r.Name.ToLower() == "user")
+                           ?? appDbContext.SystemRoles.Add(new SystemRole { Name = "User" }).Entity;
+            await Commit();
 
-                appDbContext.UserRoles.Add(new UserRole() { RoleId = result.Id, UserId = user.Id });
-                await Commit();
-            }
-            else
-            {
-                var checkIfUserIsCreated = await appDbContext.SystemRoles
-                .FirstOrDefaultAsync(_ => _.Name!.ToLower().Equals("user"));
-                int RoleId = 0;
-                if (checkIfUserIsCreated is null)
-                {
-                    var userResult = appDbContext.SystemRoles.Add(new SystemRole() { Name = "User" }).Entity;
-                    await Commit();
-                    RoleId = userResult.Id;
+            // Assign "Admin" role to the first user, "User" role to others
+            var roleToAssign = await appDbContext.UserRoles.AnyAsync() ? userRole : adminRole;
 
-                }
-                appDbContext.UserRoles.Add(new UserRole()
-                {
-                    RoleId = RoleId == 0 ? checkIfUserIsCreated!.Id : RoleId,
-                    UserId = user.Id
-                });
-                await Commit();
-            }
+            appDbContext.UserRoles.Add(new UserRole { RoleId = roleToAssign.Id, UserId = user.Id });
+            await Commit();
+
             return new ServiceResponse(true, "Account created");
         }
 
         private async Task Commit() => await appDbContext.SaveChangesAsync();
+
+        public async Task<LoginResponse> GetRefreshToken(PostRefreshTokenDTO model)
+        {
+            var normalToken = model.RefreshToken;
+
+            var getToken = await appDbContext.TokenInfo
+                .FirstOrDefaultAsync(x => x.RefreshToken == normalToken);
+            if (getToken is null) return null;
+
+            //Generate new token
+            var (newAccessToken, NewRefreshToken) = await GenerateTokens(getToken.UserId);
+
+            //Add or update Token info
+            await SaveToTokenInfo(getToken.UserId, newAccessToken, NewRefreshToken);
+            return new LoginResponse(true, "refresh-token-completed", newAccessToken, NewRefreshToken);
+        }
+
+        public async Task<UserSession?> GetUserByToken(string token)
+        {
+            var result = await (from t in appDbContext.TokenInfo
+                                join u in appDbContext.UserAccounts on t.UserId equals u.Id
+                                join ur in appDbContext.UserRoles on u.Id equals ur.UserId
+                                join r in appDbContext.SystemRoles on ur.RoleId equals r.Id
+                                where t.AccessToken == token && t.ExpiryDate >= DateTime.UtcNow
+                                select new { u.Email, u.Name, RoleName = r.Name })
+                               .FirstOrDefaultAsync();
+
+            return result is null ? null : new UserSession { Email = result.Email, Name = result.Name, Role = result.RoleName };
+        }
     }
 }
